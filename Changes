@@ -1,0 +1,6 @@
+Revision history for Perl extension Geo::Coder::YahooJapan.
+
+0.01  Thu Sep 21 21:59:49 2006
+	- original version; created by h2xs 1.23 with options
+		-AX -n Geo::Coder::YahooJapan
+
