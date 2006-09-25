@@ -27,11 +27,13 @@ our @EXPORT = qw(
 	lookup
 );
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 # Preloaded methods go here.
 
 my $entry_point = 'http://api.map.yahoo.co.jp/MapsService/V1/search';
+
+use Data::Dumper;
 
 sub lookup {
 	my $address = shift;
@@ -58,12 +60,26 @@ sub lookup {
 
 	$response or return undef;
 	
-	my $result = undef;
-	while ( $response =~ m|<(\w+)>(.+?)</\1>|g ) {
-		$result or $result = {};
-		$result->{$1} = $2;
+	my @items = ();
+	@_ = split m|<item>|, $response;
+	scalar @_ == 0 and return undef;
+
+	while ( $response =~ m|<item>(.+?)</item>|sg ) {
+		my $item_content = $1;
+
+		my $result = {};
+		while ( $item_content =~ m|<(\w+)>(.+?)</\1>|g ) {
+			$result->{$1} = $2;
+		}
+		push @items, $result;
 	}
-	return $result;
+
+	return {
+		latitude => $items[0]->{latitude},
+		longitude => $items[0]->{longitude},
+		hits => scalar @items,
+		items => \@items
+	};
 }
 
 1;
@@ -77,7 +93,7 @@ Geo::Coder::YahooJapan - a simple wrapper for Yahoo Japan Geocoder API
 =head1 SYNOPSIS
 
   use Geo::Coder::YahooJapan;
-  my $r = lookup("神奈川県川崎市中原区井田2-21-6");
+  my $r = lookup("$B?@F`@n8)@n:j;TCf866h0fED(B2-21-6");
   my ($lat, $lng) = ( $r->{latitude}, $r->{longitude} ); # coordinate in TOKYO.
 
   use Location::GeoTool;
@@ -86,7 +102,21 @@ Geo::Coder::YahooJapan - a simple wrapper for Yahoo Japan Geocoder API
   my $wgs->format_degree;
   
   # coordinate in WGS87.
-  ($lat, $lng) = ($wgs->lat, #wgs->long);
+  ($lat, $lng) = ($wgs->lat, $wgs->long);
+
+  # if address is ambiguous and the server returns multiple items
+  my $r = lookup("$BEl5~ET=BC+6hEl(B");
+  # $r->{latitude} and $r->{longitude} contains coordinate of first item.
+  my ($lat, $lng) = ( $r->{latitude}, $r->{longitude} );
+
+  # $r->{hits} has the number of candidates.
+  if ( $r->{hits} > 1 ) {
+  	# and $r->{items} contains each candidates infomation.
+  	foreach ( $r->{items} ) {
+		print join "\t", ( $_->{title}, $_->{latitude}, $_->{longitude} );
+		print "\n";
+	}
+  }
 
 =head1 DESCRIPTION
 
@@ -96,13 +126,14 @@ L<http://widgets.yahoo.co.jp/gallery/detail.html?wid=10> .
 The API returns coordinates in TOKYO datum. if you need the coordinates in WGS84,
 you need to convert them with Location::GeoTool etc.
 
-=head3 lookup(address)
+=head3 lookup(address, opts)
 
-lookup is an only method in this package that returns coordinate information
-in an hash reference.
-Maybe you can specify the address in any character set you like.
-The API server accepts UTF8, SHIFT_JIS, EUC_JP.
+Lookup is an only method in this package that returns coordinate information
+in an hash reference. When address is not enough precise, the server returns multiple candidates.
+These candidatse are found in $response->{items}. You can determine geocoding result has multiple candidates or not by seeing $response->{hits}.
 
+You can specify the address in UTF8, SHIFT_JIS, EUC_JP. But the API server does not understand ISO-2022-JP, so you need convert into other character set if your address is written in ISO-2022-JP.
+In $opts->{num}, you can specify the number of candidates you want to receive when multiple items are found. Default value is 10.
 
 =head1 DEPENDENCIES
 
@@ -114,6 +145,6 @@ L<Location::GeoTool> can convert coordination systems.
 
 =head1 AUTHOR
 
-KUMAGAI Kentaro <lt>ku0522a+cpan@gmail.comE<gt>
+KUMAGAI Kentaro E<lt>ku0522a+cpan@gmail.comE<gt>
 
 =cut
