@@ -5,7 +5,7 @@
 
 # change 'tests => 1' to 'tests => last_test_to_print';
 
-use Test::More tests => 7;
+use Test::More tests => 9;
 BEGIN { use_ok('Geo::Coder::YahooJapan') };
 
 #########################
@@ -15,28 +15,44 @@ BEGIN { use_ok('Geo::Coder::YahooJapan') };
 
 use Geo::Coder::YahooJapan;
 
+my $precision = 0.0002;
 
-my $r = Geo::Coder::YahooJapan::lookup("神奈川県川崎市中原区井田2-21-6");
-ok ( defined $r);
+{
+	my $r = Geo::Coder::YahooJapan::lookup("神奈川県川崎市中原区井田2-21-6");
+	ok ( defined $r);
 
-my $lat = 35.557595;
-my $lng = 139.64600972;
+	my $lat = 35.5608;
+	my $lng = 139.6427;
 
-my $precision = 0.000001;
+	ok ( ( abs($r->{latitude} - $lat) < $precision / 2 ) and
+			( abs($r->{longitude} - $lng) < $precision ) );
+}
 
-ok ( ( abs($r->{latitude} - $lat) < $precision ) and
-		( abs($r->{longitude} - $lng) < $precision / 2 ) );
+# tokyo
+{
+	my $r = Geo::Coder::YahooJapan::lookup("神奈川県川崎市中原区井田2-21-6", {datum => 'tokyo' });
+	ok ( defined $r);
+
+	my $lat = 35.5575;
+	my $lng = 139.6460;
+
+	ok ( ( abs($r->{latitude} - $lat) < $precision / 2 ) and
+			( abs($r->{longitude} - $lng) < $precision ) );
+}
 
 # multiple matches.
-$r = Geo::Coder::YahooJapan::lookup("東京都渋谷区東");
-ok ( defined $r);
+{
+	my $r = Geo::Coder::YahooJapan::lookup("東京都渋谷区東");
+	ok ( defined $r);
 
-$lat = 35.65008472;
-$lng = 139.71318;
+	my $lat = 35.6533;
+	my $lng = 139.7099;
 
-ok ( ( abs($r->{latitude} - $lat) < $precision ) and
-		( abs($r->{longitude} - $lng) < $precision / 2 ) );
+	ok ( ( abs($r->{latitude} - $lat) < $precision / 2 ) and
+			( abs($r->{longitude} - $lng) < $precision ) );
 
-ok( $r->{hits} > 1 );
-ok( $r->{latitude} == ${$r->{items}}[0]->{latitude} and 
-		$r->{longitude} == ${$r->{items}}[0]->{longitude} );
+	ok( $r->{hits} > 1 );
+	ok( $r->{latitude} == ${$r->{items}}[0]->{latitude} and 
+			$r->{longitude} == ${$r->{items}}[0]->{longitude} );
+}
+
