@@ -1,5 +1,8 @@
 Revision history for Perl extension Geo::Coder::YahooJapan.
 
+0.04  2006-10-02
+	- Fix test failure.
+
 0.03  2006-09-29
 	- Return results in WGS84 by default.
 

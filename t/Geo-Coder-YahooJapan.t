@@ -14,6 +14,7 @@ BEGIN { use_ok('Geo::Coder::YahooJapan') };
 # its man page ( perldoc Test::More ) for help writing this test script.
 
 use Geo::Coder::YahooJapan;
+use Location::GeoTool;
 
 my $precision = 0.0002;
 

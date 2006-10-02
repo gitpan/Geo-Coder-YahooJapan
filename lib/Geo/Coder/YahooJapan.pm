@@ -29,7 +29,7 @@ our @EXPORT = qw(
 	lookup
 );
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 # Preloaded methods go here.
 
